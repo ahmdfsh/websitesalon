@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tisya Salon & Wedding — Malang</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+
+<script>
+// ============================================================
+//  KONFIGURASI GALERI — EDIT DI SINI SAJA!
+//
+//  Cara tambah/ganti foto:
+//  1. Upload foto ke folder "foto/" di GitHub
+//  2. Ganti src dengan nama file, contoh: "foto/pengantin1.jpg"
+//  3. Isi judul, kategori, dan tahun
+//  4. Commit & Push — website otomatis update!
+//
+//  Kategori: "pengantin" | "akad" | "resepsi" | "wisuda" | "kondangan"
+//  tall: true  → foto tampil besar (2x tinggi), cocok untuk foto portrait
+//  tall: false → foto tampil normal
+// ============================================================
+
+var GALERI = [
+  {
+    src:      "foto/foto1.jpg",
+    judul:    "Adat Jawa Klasik",
+    kategori: "pengantin",
+    tahun:    "2024",
+    tall:     true
+  },
+  {
+    src:      "foto/foto5.jpg",
+    judul:    "Momen Sungkeman",
+    kategori: "resepsi",
+    tahun:    "2024",
+    tall:     false
+  },
+  {
+    src:      "foto/foto3.jpg",
+    judul:    "Resepsi Modern",
+    kategori: "resepsi",
+    tahun:    "2024",
+    tall:     false
+  },
+  {
+    src:      "foto/foto4.jpg",
+    judul:    "Dealova & Dicky",
+    kategori: "pengantin",
+    tahun:    "2024",
+    tall:     false
+  },
+  {
+    src:      "foto/foto2.jpg",
+    judul:    "Akad Nikah",
+    kategori: "akad",
+    tahun:    "2024",
+    tall:     false
+  }
+];
+
+// Foto yang tampil di bagian "Tentang Kami"
+var FOTO_ABOUT = "foto/foto1.jpg";
+
+// ============================================================
+//  SELESAI — tidak perlu edit di bawah ini
+// ============================================================
+</script>
+
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --cream:#FAF7F2;--warm-white:#FDF9F5;
+  --gold:#C9A96E;--gold-light:#E8D5B0;--gold-dark:#A07840;
+  --charcoal:#2C2420;--charcoal-mid:#4A3F38;
+  --taupe:#8B7B72;--taupe-light:#C4B5AD;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--charcoal);font-weight:300;overflow-x:hidden}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1.25rem 3rem;background:rgba(250,247,242,0.93);backdrop-filter:blur(12px);border-bottom:1px solid rgba(201,169,110,0.2)}
+.nav-logo{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:500;color:var(--charcoal);letter-spacing:0.08em;text-decoration:none}
+.nav-logo span{color:var(--gold)}
+.nav-links{display:flex;gap:2.5rem;list-style:none}
+.nav-links a{font-size:0.78rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--taupe);text-decoration:none;font-weight:400;transition:color .25s}
+.nav-links a:hover{color:var(--gold)}
+.nav-cta{font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase;padding:0.6rem 1.5rem;border:1px solid var(--gold);color:var(--gold);background:transparent;cursor:pointer;font-family:'Jost',sans-serif;font-weight:400;transition:all .3s;text-decoration:none}
+.nav-cta:hover{background:var(--gold);color:var(--warm-white)}
+
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;padding:0 2rem;overflow:hidden}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 40%,rgba(201,169,110,0.08) 0%,transparent 70%)}
+.hero-ornament{position:absolute;opacity:0.05;font-family:'Cormorant Garamond',serif;font-size:22rem;color:var(--gold);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;user-select:none;line-height:1}
+.hero-tag{font-size:0.7rem;letter-spacing:0.35em;text-transform:uppercase;color:var(--gold);margin-bottom:1.5rem;font-weight:400;display:flex;align-items:center;gap:1rem;justify-content:center}
+.hero-tag::before,.hero-tag::after{content:'';width:40px;height:1px;background:var(--gold-light)}
+.hero h1{font-family:'Cormorant Garamond',serif;font-size:clamp(3.5rem,8vw,6.5rem);font-weight:300;line-height:1.05;color:var(--charcoal);margin-bottom:0.3rem}
+.hero h1 em{font-style:italic;color:var(--gold-dark)}
+.hero-sub{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-style:italic;color:var(--taupe);margin-bottom:3rem;letter-spacing:0.05em}
+.hero-btns{display:flex;gap:1.2rem;justify-content:center;flex-wrap:wrap}
+.btn-primary{padding:0.85rem 2.5rem;background:var(--gold);color:var(--warm-white);border:none;cursor:pointer;font-family:'Jost',sans-serif;font-size:0.75rem;letter-spacing:0.2em;text-transform:uppercase;font-weight:400;transition:all .3s;text-decoration:none;display:inline-block}
+.btn-primary:hover{background:var(--gold-dark);transform:translateY(-1px)}
+.btn-outline{padding:0.85rem 2.5rem;background:transparent;color:var(--charcoal-mid);border:1px solid var(--taupe-light);cursor:pointer;font-family:'Jost',sans-serif;font-size:0.75rem;letter-spacing:0.2em;text-transform:uppercase;font-weight:400;transition:all .3s;text-decoration:none;display:inline-block}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold)}
+.hero-scroll{position:absolute;bottom:2.5rem;display:flex;flex-direction:column;align-items:center;gap:0.5rem;color:var(--taupe-light);font-size:0.65rem;letter-spacing:0.25em;text-transform:uppercase}
+.scroll-line{width:1px;height:50px;background:linear-gradient(to bottom,var(--gold-light),transparent);animation:scrollAnim 2s ease-in-out infinite}
+@keyframes scrollAnim{0%,100%{opacity:.3;transform:scaleY(.6)}50%{opacity:1;transform:scaleY(1)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.animate{animation:fadeUp .8s ease forwards}
+.d1{animation-delay:.1s;opacity:0}.d2{animation-delay:.25s;opacity:0}.d3{animation-delay:.4s;opacity:0}.d4{animation-delay:.55s;opacity:0}
+
+.section-divider{display:flex;align-items:center;justify-content:center;gap:1rem;padding:0 3rem}
+.divider-line{width:120px;height:1px;background:var(--gold-light)}
+.divider-ornament{color:var(--gold);font-size:1rem}
+
+.about{padding:7rem 3rem;display:grid;grid-template-columns:1fr 1fr;gap:5rem;max-width:1100px;margin:0 auto;align-items:center}
+.about-visual{position:relative;aspect-ratio:3/4;overflow:hidden}
+.about-visual::before{content:'';position:absolute;top:-12px;left:-12px;right:12px;bottom:12px;border:1px solid var(--gold-light);pointer-events:none;z-index:1}
+.about-visual img{width:100%;height:100%;object-fit:cover;display:block}
+.section-label{font-size:0.68rem;letter-spacing:0.35em;text-transform:uppercase;color:var(--gold);margin-bottom:1.2rem;font-weight:400}
+.section-title{font-family:'Cormorant Garamond',serif;font-size:2.8rem;font-weight:300;line-height:1.15;color:var(--charcoal);margin-bottom:1.5rem}
+.section-title em{font-style:italic;color:var(--gold-dark)}
+.section-body{font-size:0.9rem;line-height:1.85;color:var(--taupe);margin-bottom:1.2rem;font-weight:300}
+.stats-row{display:flex;gap:2.5rem;margin-top:2.5rem}
+.stat{border-left:2px solid var(--gold-light);padding-left:1rem}
+.stat-num{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:300;color:var(--charcoal)}
+.stat-label{font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--taupe)}
+
+.services-section{padding:6rem 3rem;background:var(--warm-white)}
+.section-header{text-align:center;margin-bottom:4rem}
+.services-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5px;max-width:1100px;margin:0 auto;background:var(--gold-light)}
+.service-card{background:var(--warm-white);padding:3rem 2.5rem;transition:all .3s;position:relative;overflow:hidden}
+.service-card::before{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--gold);transform:scaleX(0);transition:transform .3s}
+.service-card:hover::before{transform:scaleX(1)}
+.service-card:hover{background:var(--cream)}
+.service-num{font-family:'Cormorant Garamond',serif;font-size:3.5rem;font-weight:300;color:var(--gold-light);line-height:1;margin-bottom:1.5rem;display:block}
+.service-name{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:400;color:var(--charcoal);margin-bottom:.8rem}
+.service-desc{font-size:0.82rem;color:var(--taupe);line-height:1.75;font-weight:300}
+.service-price{margin-top:1.5rem;font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);font-weight:400}
+
+.gallery-section{padding:6rem 3rem}
+.gallery-tabs{display:flex;justify-content:center;margin-bottom:3rem;max-width:650px;margin-left:auto;margin-right:auto;border:1px solid var(--gold-light)}
+.tab-btn{flex:1;padding:0.75rem 1rem;background:transparent;border:none;cursor:pointer;font-family:'Jost',sans-serif;font-size:0.72rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--taupe);font-weight:400;transition:all .25s;border-right:1px solid var(--gold-light)}
+.tab-btn:last-child{border-right:none}
+.tab-btn.active{background:var(--gold);color:var(--warm-white)}
+.tab-btn:not(.active):hover{color:var(--gold)}
+.gallery-grid{display:grid;gap:1rem;max-width:1100px;margin:0 auto;grid-template-columns:repeat(3,1fr)}
+.gallery-item{position:relative;overflow:hidden;cursor:pointer;aspect-ratio:4/5}
+.gallery-item.tall{grid-row:span 2;aspect-ratio:auto;min-height:500px}
+.gallery-item img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .4s}
+.gallery-item:hover img{transform:scale(1.05)}
+.gallery-overlay{position:absolute;inset:0;background:rgba(44,36,32,0);transition:background .35s;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:1.5rem}
+.gallery-item:hover .gallery-overlay{background:rgba(44,36,32,0.6)}
+.gallery-info{opacity:0;transform:translateY(10px);transition:all .3s;text-align:center}
+.gallery-item:hover .gallery-info{opacity:1;transform:translateY(0)}
+.gallery-title{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:400;color:#FDF9F5;margin-bottom:.25rem}
+.gallery-cat{font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold-light)}
+
+.testimonial-section{padding:6rem 3rem;background:var(--charcoal)}
+.testimonial-header{text-align:center;margin-bottom:4rem}
+.testimonial-header .section-label{color:var(--gold-light)}
+.testimonial-header .section-title{color:var(--warm-white)}
+.testimonials-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2rem;max-width:1100px;margin:0 auto}
+.testimonial-card{padding:2.5rem;border:1px solid rgba(201,169,110,0.2);transition:border-color .3s}
+.testimonial-card:hover{border-color:rgba(201,169,110,0.5)}
+.stars{color:var(--gold);font-size:0.8rem;letter-spacing:.15em;margin-bottom:1.2rem}
+.testimonial-text{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-style:italic;color:rgba(253,249,245,0.85);line-height:1.75;margin-bottom:1.5rem;font-weight:300}
+.testimonial-author{font-size:0.72rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold)}
+.testimonial-role{font-size:0.68rem;color:rgba(253,249,245,0.4);margin-top:.25rem}
+
+.booking-section{padding:7rem 3rem;text-align:center;background:var(--cream)}
+.booking-inner{max-width:600px;margin:0 auto}
+.booking-ornament{font-family:'Cormorant Garamond',serif;font-size:5rem;color:var(--gold-light);line-height:1;margin-bottom:-1rem}
+
+footer{padding:3rem;border-top:1px solid var(--gold-light);display:flex;justify-content:space-between;align-items:center;background:var(--warm-white);flex-wrap:wrap;gap:1rem}
+.footer-logo{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:500;color:var(--charcoal)}
+.footer-logo span{color:var(--gold)}
+.footer-text{font-size:0.72rem;color:var(--taupe);letter-spacing:.1em}
+.footer-social{display:flex;gap:1.5rem}
+.social-link{font-size:0.68rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--taupe);text-decoration:none;transition:color .25s}
+.social-link:hover{color:var(--gold)}
+
+.modal-overlay{display:none;position:fixed;inset:0;z-index:1000;background:rgba(44,36,32,0.85);align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(--warm-white);max-width:500px;width:90%;padding:3rem;position:relative}
+.modal-close{position:absolute;top:1.25rem;right:1.25rem;background:none;border:none;cursor:pointer;font-size:1.2rem;color:var(--taupe);line-height:1}
+.modal-close:hover{color:var(--charcoal)}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:400;color:var(--charcoal);margin-bottom:.5rem}
+.modal-sub{font-size:0.8rem;color:var(--taupe);margin-bottom:2rem}
+.form-group{margin-bottom:1.2rem}
+.form-label{display:block;font-size:0.68rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--taupe);margin-bottom:.5rem}
+.form-input,.form-select{width:100%;padding:0.7rem 0.9rem;border:1px solid var(--gold-light);background:var(--cream);font-family:'Jost',sans-serif;font-size:0.85rem;color:var(--charcoal);outline:none;transition:border-color .25s;appearance:none}
+.form-input:focus,.form-select:focus{border-color:var(--gold)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+
+.lightbox{display:none;position:fixed;inset:0;z-index:2000;background:rgba(20,14,12,0.96);align-items:center;justify-content:center}
+.lightbox.open{display:flex}
+.lightbox img{max-width:90vw;max-height:90vh;object-fit:contain}
+.lightbox-close{position:absolute;top:1.5rem;right:2rem;background:none;border:none;color:var(--gold-light);font-size:2.5rem;cursor:pointer;line-height:1}
+
+@media(max-width:768px){
+  nav{padding:1rem 1.5rem}.nav-links{display:none}
+  .about{grid-template-columns:1fr;gap:3rem;padding:4rem 1.5rem}
+  .services-grid{grid-template-columns:1fr}
+  .gallery-grid{grid-template-columns:repeat(2,1fr)}
+  .gallery-item.tall{grid-row:span 1;min-height:auto}
+  .testimonials-grid{grid-template-columns:1fr}
+  footer{flex-direction:column;text-align:center;padding:2rem 1.5rem}
+  .gallery-tabs{flex-wrap:wrap}
+  .services-section,.gallery-section,.testimonial-section,.booking-section{padding:4rem 1.5rem}
+}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--cream)}
+::-webkit-scrollbar-thumb{background:var(--gold-light);border-radius:2px}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="#hero" class="nav-logo">Tisya <span>&</span> Wedding</a>
+  <ul class="nav-links">
+    <li><a href="#about">Tentang</a></li>
+    <li><a href="#services">Layanan</a></li>
+    <li><a href="#gallery">Galeri</a></li>
+    <li><a href="#testimonials">Ulasan</a></li>
+  </ul>
+  <a href="#" class="nav-cta" onclick="openBooking();return false;">Book Sekarang</a>
+</nav>
+
+<section class="hero" id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-ornament">✦</div>
+  <div class="animate d1"><div class="hero-tag">Malang · East Java</div></div>
+  <div class="animate d2"><h1>Tisya Salon<br><em>&amp; Wedding</em></h1></div>
+  <p class="hero-sub animate d3">Kecantikan yang tulus, sentuhan yang membekas</p>
+  <div class="hero-btns animate d4">
+    <a href="#gallery" class="btn-primary">Lihat Galeri</a>
+    <a href="#" class="btn-outline" onclick="openBooking();return false;">Reservasi</a>
+  </div>
+  <div class="hero-scroll"><div class="scroll-line"></div><span>Scroll</span></div>
+</section>
+
+<section class="about" id="about">
+  <div class="about-visual">
+    <img id="about-img" src="" alt="Tisya Wedding">
+  </div>
+  <div class="about-content">
+    <p class="section-label">Tentang Kami</p>
+    <h2 class="section-title">Setiap Wajah<br><em>Punya Ceritanya</em></h2>
+    <p class="section-body">Tisya Salon &amp; Wedding hadir untuk menemani momen paling berharga dalam hidupmu. Dengan keahlian makeup artistik dan layanan salon terpadu, kami memastikan setiap tampilan mencerminkan keindahan aslimu — elegan, autentik, dan tak terlupakan.</p>
+    <p class="section-body">Berbasis di Malang, kami melayani dengan sepenuh hati — mulai dari riasan pernikahan mewah, wisuda berkesan, hingga perawatan kecantikan harian.</p>
+    <div class="stats-row">
+      <div class="stat"><div class="stat-num">500+</div><div class="stat-label">Klien Puas</div></div>
+      <div class="stat"><div class="stat-num">8</div><div class="stat-label">Tahun Pengalaman</div></div>
+      <div class="stat"><div class="stat-num">200+</div><div class="stat-label">Pernikahan</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"><div class="divider-line"></div><div class="divider-ornament">✦</div><div class="divider-line"></div></div>
+
+<section class="services-section" id="services">
+  <div class="section-header">
+    <p class="section-label">Layanan Kami</p>
+    <h2 class="section-title">Yang Kami <em>Tawarkan</em></h2>
+  </div>
+  <div class="services-grid">
+    <div class="service-card"><span class="service-num">01</span><div class="service-name">Makeup Pengantin</div><p class="service-desc">Riasan pernikahan yang tahan lama, natural, dan sempurna untuk hari bahagiamu. Termasuk sesi konsultasi dan uji coba.</p><div class="service-price">Mulai Rp 1.500.000</div></div>
+    <div class="service-card"><span class="service-num">02</span><div class="service-name">Makeup Wisuda</div><p class="service-desc">Tampil percaya diri dan bersinar di momen wisudamu. Riasan elegan yang cocok untuk semua jenis kulit.</p><div class="service-price">Mulai Rp 350.000</div></div>
+    <div class="service-card"><span class="service-num">03</span><div class="service-name">Makeup Kondangan</div><p class="service-desc">Tampil cantik maksimal di acara kondangan dan pesta. Ekspresikan dirimu dengan sentuhan glam atau natural.</p><div class="service-price">Mulai Rp 250.000</div></div>
+    <div class="service-card"><span class="service-num">04</span><div class="service-name">Perawatan Rambut</div><p class="service-desc">Creambath, hair mask, smoothing, dan styling rambut oleh tenaga ahli berpengalaman untuk rambut sehat berkilau.</p><div class="service-price">Mulai Rp 75.000</div></div>
+    <div class="service-card"><span class="service-num">05</span><div class="service-name">Perawatan Kulit</div><p class="service-desc">Facial, peeling, dan treatment kulit wajah yang disesuaikan dengan jenis dan kebutuhan kulitmu.</p><div class="service-price">Mulai Rp 120.000</div></div>
+    <div class="service-card"><span class="service-num">06</span><div class="service-name">Paket Bridal</div><p class="service-desc">Paket lengkap untuk pengantin: makeup, rambut, nail art, dan perawatan menjelang hari pernikahan.</p><div class="service-price">Mulai Rp 3.500.000</div></div>
+  </div>
+</section>
+
+<section class="gallery-section" id="gallery">
+  <div class="section-header">
+    <p class="section-label">Portfolio</p>
+    <h2 class="section-title">Karya <em>Kami</em></h2>
+  </div>
+  <div class="gallery-tabs" id="galleryTabs">
+    <button class="tab-btn active" data-cat="all">Semua</button>
+    <button class="tab-btn" data-cat="pengantin">Pengantin</button>
+    <button class="tab-btn" data-cat="akad">Akad Nikah</button>
+    <button class="tab-btn" data-cat="resepsi">Resepsi</button>
+    <button class="tab-btn" data-cat="wisuda">Wisuda</button>
+  </div>
+  <div class="gallery-grid" id="galleryGrid"></div>
+</section>
+
+<div class="section-divider" style="margin:0"><div class="divider-line"></div><div class="divider-ornament">✦</div><div class="divider-line"></div></div>
+
+<section class="testimonial-section" id="testimonials">
+  <div class="testimonial-header">
+    <p class="section-label">Ulasan Klien</p>
+    <h2 class="section-title">Kata <em>Mereka</em></h2>
+  </div>
+  <div class="testimonials-grid">
+    <div class="testimonial-card"><div class="stars">★ ★ ★ ★ ★</div><p class="testimonial-text">"Riasan pengantin saya benar-benar di luar ekspektasi. Tahan sepanjang hari dan tidak terasa berat di wajah. Sangat merekomendasikan Tisya!"</p><div class="testimonial-author">Aulia Rahmadani</div><div class="testimonial-role">Pengantin · November 2024</div></div>
+    <div class="testimonial-card"><div class="stars">★ ★ ★ ★ ★</div><p class="testimonial-text">"Wisuda jadi makin berkesan! Makeupnya natural tapi tetap fotogenik. Pelayanannya ramah dan profesional banget."</p><div class="testimonial-author">Nadya Fitria</div><div class="testimonial-role">Wisuda UB · Oktober 2024</div></div>
+    <div class="testimonial-card"><div class="stars">★ ★ ★ ★ ★</div><p class="testimonial-text">"Sudah langganan ke Tisya selama 3 tahun. Kualitasnya konsisten dan selalu update tren terbaru. Tempatnya juga nyaman!"</p><div class="testimonial-author">Mega Kartika</div><div class="testimonial-role">Pelanggan Setia</div></div>
+  </div>
+</section>
+
+<section class="booking-section" id="booking">
+  <div class="booking-inner">
+    <div class="booking-ornament">✦</div>
+    <p class="section-label" style="margin-top:1rem">Reservasi</p>
+    <h2 class="section-title">Mulai Perjalanan<br><em>Kecantikanmu</em></h2>
+    <p class="section-body">Hubungi kami untuk konsultasi gratis dan jadwalkan sesi pertamamu bersama Tisya Salon &amp; Wedding.</p>
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-top:2rem">
+      <button class="btn-primary" onclick="openBooking()">Book Sekarang</button>
+      <a href="https://wa.me/6285855994940" class="btn-outline" target="_blank">Chat WhatsApp</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">Tisya <span>&</span> Wedding</div>
+  <div class="footer-text">© 2025 Tisya Salon & Wedding · Malang, East Java</div>
+  <div class="footer-social">
+    <a href="https://instagram.com" class="social-link" target="_blank">Instagram</a>
+    <a href="https://tiktok.com" class="social-link" target="_blank">TikTok</a>
+    <a href="https://wa.me/6285855994940" class="social-link" target="_blank">WhatsApp</a>
+  </div>
+</footer>
+
+<div class="modal-overlay" id="bookingModal" onclick="closeIfOverlay(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeBooking()">✕</button>
+    <div class="modal-title">Book Sekarang</div>
+    <p class="modal-sub">Isi form di bawah dan kami akan menghubungimu via WhatsApp</p>
+    <div class="form-group"><label class="form-label">Nama Lengkap</label><input type="text" class="form-input" id="f-nama" placeholder="Nama kamu..."></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">No. WhatsApp</label><input type="text" class="form-input" id="f-wa" placeholder="08..."></div>
+      <div class="form-group"><label class="form-label">Tanggal</label><input type="date" class="form-input" id="f-tanggal"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Layanan</label>
+      <select class="form-select form-input" id="f-layanan">
+        <option value="">Pilih layanan...</option>
+        <option>Makeup Pengantin</option><option>Makeup Wisuda</option>
+        <option>Makeup Kondangan</option><option>Perawatan Rambut</option>
+        <option>Perawatan Kulit</option><option>Paket Bridal</option>
+      </select>
+    </div>
+    <button class="btn-primary" style="width:100%;margin-top:.5rem" onclick="submitBooking()">Kirim via WhatsApp</button>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightboxImg" src="" alt="">
+</div>
+
+<script>
+// Inject foto about
+document.getElementById('about-img').src = FOTO_ABOUT;
+
+// Build gallery dari config
+(function(){
+  var grid = document.getElementById('galleryGrid');
+  GALERI.forEach(function(item){
+    var div = document.createElement('div');
+    div.className = 'gallery-item' + (item.tall ? ' tall' : '');
+    div.dataset.cat = item.kategori;
+    div.onclick = function(){ openLightbox(item.src); };
+    var kat = item.kategori.charAt(0).toUpperCase() + item.kategori.slice(1);
+    div.innerHTML =
+      '<img src="'+item.src+'" alt="'+item.judul+'" loading="lazy">' +
+      '<div class="gallery-overlay"><div class="gallery-info">' +
+      '<div class="gallery-title">'+item.judul+'</div>' +
+      '<div class="gallery-cat">'+kat+' · '+item.tahun+'</div>' +
+      '</div></div>';
+    grid.appendChild(div);
+  });
+})();
+
+// Gallery filter
+document.getElementById('galleryTabs').addEventListener('click',function(e){
+  if(!e.target.matches('.tab-btn'))return;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  e.target.classList.add('active');
+  var cat=e.target.dataset.cat;
+  document.querySelectorAll('.gallery-item').forEach(function(item){
+    item.style.display=(cat==='all'||item.dataset.cat===cat)?'':'none';
+  });
+});
+
+// Booking
+function openBooking(){document.getElementById('bookingModal').classList.add('open')}
+function closeBooking(){document.getElementById('bookingModal').classList.remove('open')}
+function closeIfOverlay(e){if(e.target===document.getElementById('bookingModal'))closeBooking()}
+function submitBooking(){
+  var nama=document.getElementById('f-nama').value||'-';
+  var wa=document.getElementById('f-wa').value||'-';
+  var tgl=document.getElementById('f-tanggal').value||'-';
+  var layanan=document.getElementById('f-layanan').value||'-';
+  var pesan='Halo Tisya Salon! Saya ingin reservasi:\n\nNama: '+nama+'\nNo WA: '+wa+'\nTanggal: '+tgl+'\nLayanan: '+layanan;
+  window.open('https://wa.me/6285855994940?text='+encodeURIComponent(pesan),'_blank');
+  closeBooking();
+}
+
+// Lightbox
+function openLightbox(src){
+  document.getElementById('lightboxImg').src=src;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox(){
+  document.getElementById('lightbox').classList.remove('open');
+  document.getElementById('lightboxImg').src='';
+}
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeBooking();closeLightbox()}});
+
+// Smooth scroll
+document.querySelectorAll('a[href^="#"]').forEach(function(a){
+  a.addEventListener('click',function(e){
+    var t=document.querySelector(a.getAttribute('href'));
+    if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth',block:'start'})}
+  });
+});
+</script>
+</body>
+</html>
