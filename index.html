@@ -281,16 +281,17 @@ footer{padding:3rem;border-top:1px solid var(--gold-light);display:flex;justify-
 .lightbox{display:none;position:fixed;inset:0;z-index:2000;background:rgba(20,14,12,0.96);overflow:hidden;touch-action:none}
 .lightbox.open{display:block}
 .lb-viewport{position:absolute;inset:0;overflow:hidden}
-/* track 3 slide: kiri = foto sebelumnya, tengah = aktif, kanan = berikutnya.
-   transform awal = posisi tengah supaya tidak ada kedip sebelum JS siap */
-.lb-track{display:flex;column-gap:3vw;height:100%;align-items:center;transform:translate3d(-82vw,0,0);will-change:transform}
-.lb-slide{flex:0 0 86vw;width:86vw;height:100%;display:flex;align-items:center;justify-content:center;position:relative;z-index:0}
+/* track: lebar tiap slide mengikuti lebar fotonya sendiri (bukan vw), jadi peek kiri/kanan
+   selalu kelihatan baik di mobile maupun desktop */
+.lb-track{position:absolute;inset:0;opacity:0;transition:opacity .14s}
+.lb-track.lb-ready{opacity:1}
+.lb-slide{position:absolute;top:0;left:0;height:100%;display:flex;align-items:center;justify-content:center;will-change:transform;z-index:0}
 .lb-slide.lb-active{z-index:2}
-.lb-slide img{max-width:100%;max-height:88vh;object-fit:contain;user-select:none;-webkit-user-drag:none;cursor:zoom-in;will-change:transform}
+.lb-slide img{max-height:82vh;max-width:88vw;object-fit:contain;user-select:none;-webkit-user-drag:none;cursor:zoom-in;will-change:transform}
 .lb-slide img:active{cursor:grabbing}
 .lightbox-close{position:absolute;top:1.5rem;right:2rem;z-index:5;background:none;border:none;color:var(--gold-light);font-size:2.5rem;cursor:pointer;line-height:1}
 .lightbox-count{position:absolute;bottom:1.5rem;left:50%;transform:translateX(-50%);z-index:5;font-size:0.72rem;letter-spacing:0.2em;color:var(--gold-light);opacity:0.8}
-.lb-hint{position:absolute;top:1.6rem;left:2rem;z-index:5;font-size:0.62rem;letter-spacing:0.18em;color:var(--gold-light);opacity:0.45}
+.lb-hint{position:absolute;top:1.6rem;left:2rem;z-index:5;font-size:0.62rem;letter-spacing:0.18em;color:var(--gold-light);opacity:0.62}
 
 /* PRICELIST POPUP */
 .pagination{display:flex;align-items:center;justify-content:center;gap:0.8rem;margin-top:3rem;flex-wrap:wrap}
@@ -623,7 +624,7 @@ var CATATAN = [
 </div> -->
 
 <div class="lightbox" id="lightbox">
-  <div class="lb-hint">GESER · CUBIT / DOUBLE KLIK UNTUK ZOOM</div>
+  <div class="lb-hint">GESER · SCROLL / DOUBLE KLIK UNTUK ZOOM</div>
   <button class="lightbox-close" onclick="closeLightbox()">✕</button>
   <div class="lb-viewport" id="lbViewport">
     <div class="lb-track" id="lbTrack">
@@ -790,25 +791,27 @@ function submitBooking(){
 
 // ===== LIGHTBOX: track 3 slide (sebelum / aktif / berikut) + zoom-pan =====
 var lbList = [], lbIndex = 0, lbBusy = false, lbDragged = false;
-var lbSlides = [], lbBaseX = 0, lbStepX = 0;
+var lbSlides = [];
 var lbScale = 1, lbTx = 0, lbTy = 0;
 
 function lbTrackEl(){ return document.getElementById('lbTrack'); }
 function lbViewEl(){ return document.getElementById('lbViewport'); }
 function lbActiveImg(){ return lbSlides[1] ? lbSlides[1].querySelector('img') : null; }
 
-function lbMeasure(){
-  var vw = lbViewEl().clientWidth;
-  var w = lbSlides[0].getBoundingClientRect().width;
-  var gap = parseFloat(getComputedStyle(lbTrackEl()).columnGap) || 0;
-  lbStepX = w + gap;
-  lbBaseX = (vw - w) / 2 - lbStepX;          // slide tengah pas di tengah, sisanya intip di kiri/kanan
-}
+function lbPeek(){ return Math.min(44, Math.max(14, lbViewEl().clientWidth * 0.022)); }
 
-function lbMoveTrack(x, animate){
-  var t = lbTrackEl();
-  t.style.transition = animate ? 'transform .34s cubic-bezier(.22,.61,.36,1)' : 'none';
-  t.style.transform = 'translate3d(' + x + 'px,0,0)';
+// Posisi tiap slide: foto aktif di tengah, tetangga cuma "intip" selebar peek
+// berapa pun lebar fotonya (foto landscape tidak lagi menutupi setengah layar)
+function lbLayout(dx, animate){
+  var vw = lbViewEl().clientWidth, pea = lbPeek();
+  lbSlides.forEach(function(slide, k){
+    var w = slide.getBoundingClientRect().width;
+    var left = k === 1 ? (vw - w) / 2 + dx
+             : k === 0 ? pea - w + dx
+             :           vw - pea + dx;
+    slide.style.transition = animate ? 'transform .34s cubic-bezier(.22,.61,.36,1)' : 'none';
+    slide.style.transform = 'translate3d(' + left + 'px,0,0)';
+  });
 }
 
 function lbApplyZoom(animate){
@@ -855,45 +858,56 @@ function lbFill(){
   });
   document.getElementById('lightboxCount').textContent = (lbIndex + 1) + ' / ' + n;
   document.getElementById('lightboxCount').style.display = n > 1 ? 'block' : 'none';
+  lbReflow();
 }
 
-function lightboxStep(dir){
-  if (lbList.length < 2) return;
-  lbIndex = (lbIndex + dir + lbList.length) % lbList.length;
-  lbFill();
+// Lebar slide ikut ukuran foto, dan foto baru punya ukuran setelah selesai decode.
+// Jadi tata letak dijalankan sekali sekarang + sekali lagi setelah gambar siap.
+function lbReflow(){
+  if (!document.getElementById('lightbox').classList.contains('open')) return;
+  lbLayout(0, false);
+  lbTrackEl().classList.add('lb-ready');
+  var imgs = lbSlides.map(function(s){ return s.querySelector('img'); });
+  Promise.all(imgs.map(function(i){
+    return (i.decode ? i.decode() : Promise.resolve()).catch(function(){});
+  })).then(function(){ lbLayout(0, false); });
 }
 
 function openLightbox(idx){
   lbList = getFiltered();
   lbIndex = idx;
   lbSlides = Array.prototype.slice.call(document.querySelectorAll('.lb-slide'));
-  lbFill();
+  document.getElementById('lightbox').classList.add('open');   // dulu, supaya reflow jalan
   lbResetZoom(false);
-  document.getElementById('lightbox').classList.add('open');
-  requestAnimationFrame(function(){ lbMeasure(); lbMoveTrack(lbBaseX, false); });
+  lbFill();                                                    // isi 3 slide + tata letak
 }
 
-// Pindah foto: track meluncur satu langkah, lalu urutan slide dirotasi
-// (slide lama tidak dihapus, cuma digeser posisinya) => tidak ada kedip
+// Pindah foto: slide tetangga digeser sampai ke tengah, lalu urutan slide dirotasi
+// (slide lama tidak dihapus, cuma dipindah posisinya) => tidak ada kedip
 function slideTo(dir){
   if (lbBusy || lbList.length < 2) return;
   lbBusy = true;
   lbResetZoom(false);
-  lbMoveTrack(lbBaseX - dir * lbStepX, true);
+  var vw = lbViewEl().clientWidth, pea = lbPeek();
+  var wT = lbSlides[dir > 0 ? 2 : 0].getBoundingClientRect().width;
+  var dx = dir > 0 ? (vw - wT) / 2 - (vw - pea)      // slide kanan masuk ke tengah
+                   : (vw + wT) / 2 - pea;            // slide kiri masuk ke tengah
+  lbLayout(dx, true);
   setTimeout(function(){
     var track = lbTrackEl();
     if (dir > 0) track.appendChild(track.firstElementChild);
     else track.insertBefore(track.lastElementChild, track.firstElementChild);
     lbSlides = Array.prototype.slice.call(track.children);
     lbIndex = (lbIndex + dir + lbList.length) % lbList.length;
-    lbMoveTrack(lbBaseX, false);
     lbFill();
+    lbLayout(0, false);
     lbBusy = false;
   }, 350);
 }
 
 function closeLightbox(){
   document.getElementById('lightbox').classList.remove('open');
+  lbTrackEl().classList.remove('lb-ready');
   lbResetZoom(false);
   lbList = []; lbIndex = 0;
 }
@@ -952,7 +966,7 @@ function closeLightbox(){
     var now = performance.now();
     vel = (e.clientX - lastX) / Math.max(1, now - lastT);
     lastX = e.clientX; lastT = now;
-    lbMoveTrack(lbBaseX + dx, false);        // ikut jari, tanpa delay
+    lbLayout(dx, false);                     // ikut jari, tanpa delay
   });
 
   function endPointer(e){
@@ -986,7 +1000,7 @@ function closeLightbox(){
       var far = Math.abs(dragX) > Math.min(90, view.clientWidth * 0.16);
       var flick = Math.abs(vel) > 0.45;       // flick ringan tetap lanjut
       if (far || flick) slideTo(dragX < 0 ? 1 : -1);
-      else lbMoveTrack(lbBaseX, true);        // kurang jauh => balik ke tengah
+      else lbLayout(0, true);                 // kurang jauh => balik ke tengah
       return;
     }
     // tap tanpa gerak: double tap = zoom
@@ -1026,7 +1040,7 @@ function closeLightbox(){
 
   window.addEventListener('resize', function(){
     if (!lb.classList.contains('open')) return;
-    lbMeasure(); lbMoveTrack(lbBaseX, false); lbClampPan(); lbApplyZoom(false);
+    lbLayout(0, false); lbClampPan(); lbApplyZoom(false);
   });
 })();
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeBooking();closeLightbox();closePricelist()}});
