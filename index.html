@@ -278,10 +278,19 @@ footer{padding:3rem;border-top:1px solid var(--gold-light);display:flex;justify-
 .form-input:focus,.form-select:focus{border-color:var(--gold)}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
 
-.lightbox{display:none;position:fixed;inset:0;z-index:2000;background:rgba(20,14,12,0.96);align-items:center;justify-content:center}
-.lightbox.open{display:flex}
-.lightbox img{max-width:90vw;max-height:90vh;object-fit:contain}
-.lightbox-close{position:absolute;top:1.5rem;right:2rem;background:none;border:none;color:var(--gold-light);font-size:2.5rem;cursor:pointer;line-height:1}
+.lightbox{display:none;position:fixed;inset:0;z-index:2000;background:rgba(20,14,12,0.96);overflow:hidden;touch-action:none}
+.lightbox.open{display:block}
+.lb-viewport{position:absolute;inset:0;overflow:hidden}
+/* track 3 slide: kiri = foto sebelumnya, tengah = aktif, kanan = berikutnya.
+   transform awal = posisi tengah supaya tidak ada kedip sebelum JS siap */
+.lb-track{display:flex;column-gap:3vw;height:100%;align-items:center;transform:translate3d(-82vw,0,0);will-change:transform}
+.lb-slide{flex:0 0 86vw;width:86vw;height:100%;display:flex;align-items:center;justify-content:center;position:relative;z-index:0}
+.lb-slide.lb-active{z-index:2}
+.lb-slide img{max-width:100%;max-height:88vh;object-fit:contain;user-select:none;-webkit-user-drag:none;cursor:zoom-in;will-change:transform}
+.lb-slide img:active{cursor:grabbing}
+.lightbox-close{position:absolute;top:1.5rem;right:2rem;z-index:5;background:none;border:none;color:var(--gold-light);font-size:2.5rem;cursor:pointer;line-height:1}
+.lightbox-count{position:absolute;bottom:1.5rem;left:50%;transform:translateX(-50%);z-index:5;font-size:0.72rem;letter-spacing:0.2em;color:var(--gold-light);opacity:0.8}
+.lb-hint{position:absolute;top:1.6rem;left:2rem;z-index:5;font-size:0.62rem;letter-spacing:0.18em;color:var(--gold-light);opacity:0.45}
 
 /* PRICELIST POPUP */
 .pagination{display:flex;align-items:center;justify-content:center;gap:0.8rem;margin-top:3rem;flex-wrap:wrap}
@@ -515,7 +524,7 @@ var ULASAN = [
 </section>
 
 <footer>
-  <div class="footer-logo">Tisya <span>&</span> Wedding</div>
+  <div class="footer-logo">Tisya Salon <span>&</span> Wedding</div>
   <div class="footer-text">© 2025 Tisya Salon & Wedding · Malang, East Java</div>
   <div class="footer-social">
     <a href="https://instagram.com/tisyasalon.mlg" class="social-link" target="_blank">Instagram</a>
@@ -613,9 +622,17 @@ var CATATAN = [
   </div>
 </div> -->
 
-<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+<div class="lightbox" id="lightbox">
+  <div class="lb-hint">GESER · CUBIT / DOUBLE KLIK UNTUK ZOOM</div>
   <button class="lightbox-close" onclick="closeLightbox()">✕</button>
-  <img id="lightboxImg" src="" alt="">
+  <div class="lb-viewport" id="lbViewport">
+    <div class="lb-track" id="lbTrack">
+      <div class="lb-slide"><img alt=""></div>
+      <div class="lb-slide"><img alt=""></div>
+      <div class="lb-slide"><img alt=""></div>
+    </div>
+  </div>
+  <div class="lightbox-count" id="lightboxCount"></div>
 </div>
 
 <script>
@@ -651,7 +668,7 @@ function buildGrid(page) {
     var div = document.createElement('div');
     div.className = 'gallery-item' + (item.tall ? ' tall' : '');
     div.dataset.cat = item.kategori;
-    div.onclick = function(){ openLightbox(item.src); };
+    div.onclick = function(){ openLightbox(filtered.indexOf(item)); };
     var kat = item.kategori.charAt(0).toUpperCase() + item.kategori.slice(1);
     div.innerHTML =
       '<img src="'+item.src+'" alt="'+item.judul+'" loading="lazy">' +
@@ -771,15 +788,247 @@ function submitBooking(){
   closeBooking();
 }
 
-// Lightbox
-function openLightbox(src){
-  document.getElementById('lightboxImg').src=src;
-  document.getElementById('lightbox').classList.add('open');
+// ===== LIGHTBOX: track 3 slide (sebelum / aktif / berikut) + zoom-pan =====
+var lbList = [], lbIndex = 0, lbBusy = false, lbDragged = false;
+var lbSlides = [], lbBaseX = 0, lbStepX = 0;
+var lbScale = 1, lbTx = 0, lbTy = 0;
+
+function lbTrackEl(){ return document.getElementById('lbTrack'); }
+function lbViewEl(){ return document.getElementById('lbViewport'); }
+function lbActiveImg(){ return lbSlides[1] ? lbSlides[1].querySelector('img') : null; }
+
+function lbMeasure(){
+  var vw = lbViewEl().clientWidth;
+  var w = lbSlides[0].getBoundingClientRect().width;
+  var gap = parseFloat(getComputedStyle(lbTrackEl()).columnGap) || 0;
+  lbStepX = w + gap;
+  lbBaseX = (vw - w) / 2 - lbStepX;          // slide tengah pas di tengah, sisanya intip di kiri/kanan
 }
+
+function lbMoveTrack(x, animate){
+  var t = lbTrackEl();
+  t.style.transition = animate ? 'transform .34s cubic-bezier(.22,.61,.36,1)' : 'none';
+  t.style.transform = 'translate3d(' + x + 'px,0,0)';
+}
+
+function lbApplyZoom(animate){
+  var img = lbActiveImg();
+  if (!img) return;
+  img.style.transition = animate ? 'transform .28s cubic-bezier(.22,.61,.36,1)' : 'none';
+  img.style.transform = 'translate3d(' + lbTx + 'px,' + lbTy + 'px,0) scale(' + lbScale + ')';
+  img.style.cursor = lbScale > 1 ? 'grab' : 'zoom-in';
+}
+
+function lbClampPan(){
+  var img = lbActiveImg();
+  if (!img) return;
+  var r = img.getBoundingClientRect();
+  var w = r.width / lbScale, h = r.height / lbScale;     // ukuran layout, sebelum di-scale
+  var limX = Math.max(0, (w * lbScale - lbViewEl().clientWidth) / 2);
+  var limY = Math.max(0, (h * lbScale - lbViewEl().clientHeight) / 2);
+  lbTx = Math.min(limX, Math.max(-limX, lbTx));
+  lbTy = Math.min(limY, Math.max(-limY, lbTy));
+}
+
+function lbResetZoom(animate){
+  lbScale = 1; lbTx = 0; lbTy = 0;
+  lbApplyZoom(animate);
+}
+
+function lbToggleZoom(){
+  if (lbScale > 1){ lbResetZoom(true); return; }
+  lbScale = 2.4; lbTx = 0; lbTy = 0;
+  lbClampPan();
+  lbApplyZoom(true);
+}
+
+// Isi src tiap slide sesuai index sekarang: kiri=prev, tengah=aktif, kanan=next
+function lbFill(){
+  var n = lbList.length;
+  if (!n) return;
+  lbSlides.forEach(function(slide, k){
+    var item = lbList[(lbIndex + k - 1 + n) % n];
+    var img = slide.querySelector('img');
+    img.src = item.src;
+    img.alt = item.judul;
+    slide.classList.toggle('lb-active', k === 1);
+  });
+  document.getElementById('lightboxCount').textContent = (lbIndex + 1) + ' / ' + n;
+  document.getElementById('lightboxCount').style.display = n > 1 ? 'block' : 'none';
+}
+
+function lightboxStep(dir){
+  if (lbList.length < 2) return;
+  lbIndex = (lbIndex + dir + lbList.length) % lbList.length;
+  lbFill();
+}
+
+function openLightbox(idx){
+  lbList = getFiltered();
+  lbIndex = idx;
+  lbSlides = Array.prototype.slice.call(document.querySelectorAll('.lb-slide'));
+  lbFill();
+  lbResetZoom(false);
+  document.getElementById('lightbox').classList.add('open');
+  requestAnimationFrame(function(){ lbMeasure(); lbMoveTrack(lbBaseX, false); });
+}
+
+// Pindah foto: track meluncur satu langkah, lalu urutan slide dirotasi
+// (slide lama tidak dihapus, cuma digeser posisinya) => tidak ada kedip
+function slideTo(dir){
+  if (lbBusy || lbList.length < 2) return;
+  lbBusy = true;
+  lbResetZoom(false);
+  lbMoveTrack(lbBaseX - dir * lbStepX, true);
+  setTimeout(function(){
+    var track = lbTrackEl();
+    if (dir > 0) track.appendChild(track.firstElementChild);
+    else track.insertBefore(track.lastElementChild, track.firstElementChild);
+    lbSlides = Array.prototype.slice.call(track.children);
+    lbIndex = (lbIndex + dir + lbList.length) % lbList.length;
+    lbMoveTrack(lbBaseX, false);
+    lbFill();
+    lbBusy = false;
+  }, 350);
+}
+
 function closeLightbox(){
   document.getElementById('lightbox').classList.remove('open');
-  document.getElementById('lightboxImg').src='';
+  lbResetZoom(false);
+  lbList = []; lbIndex = 0;
 }
+
+// Gestur: swipe saat zoom 1x, pan saat zoom >1, pinch untuk zoom, double tap untuk zoom
+(function(){
+  var lb = document.getElementById('lightbox'), view = document.getElementById('lbViewport');
+  var pts = {}, order = [];
+  var mode = null, dragOn = false, fromControl = false;
+  var x0 = 0, y0 = 0, tx0 = 0, ty0 = 0, dist0 = 0, scale0 = 1;
+    var lastX = 0, lastT = 0, vel = 0, dragX = 0, lastTap = 0, downOnImg = false;
+
+  function dist(){ var a = pts[order[0]], b = pts[order[1]]; return Math.hypot(a.x - b.x, a.y - b.y); }
+
+  lb.addEventListener('pointerdown', function(e){
+      fromControl = !!e.target.closest('.lightbox-close');
+      downOnImg = !!e.target.closest('img');
+      if (fromControl || lbBusy) return;
+    pts[e.pointerId] = {x: e.clientX, y: e.clientY};
+    if (order.indexOf(e.pointerId) < 0) order.push(e.pointerId);
+    try { view.setPointerCapture(e.pointerId); } catch(_) {}
+
+    if (order.length === 1){
+      x0 = lastX = e.clientX; y0 = e.clientY; lastT = performance.now();
+      vel = 0; dragX = 0; dragOn = false;
+      mode = lbScale > 1 ? 'pan' : 'swipe';
+      tx0 = lbTx; ty0 = lbTy;
+    } else if (order.length === 2){
+      mode = 'pinch'; dist0 = dist(); scale0 = lbScale;
+    }
+  });
+
+  lb.addEventListener('pointermove', function(e){
+    if (!pts[e.pointerId]) return;
+    pts[e.pointerId] = {x: e.clientX, y: e.clientY};
+
+    if (mode === 'pinch' && order.length >= 2){
+      lbScale = Math.min(4, Math.max(1, scale0 * dist() / (dist0 || 1)));
+      if (lbScale === 1){ lbTx = 0; lbTy = 0; }
+      lbClampPan(); lbApplyZoom(false);
+      return;
+    }
+    if (mode === 'pan'){
+      lbTx = tx0 + (e.clientX - x0); lbTy = ty0 + (e.clientY - y0);
+      lbClampPan(); lbApplyZoom(false);
+      return;
+    }
+    if (mode !== 'swipe') return;
+
+    var dx = e.clientX - x0, dy = e.clientY - y0;
+    if (!dragOn){
+      if (Math.abs(dx) < 8 || Math.abs(dx) <= Math.abs(dy)) return;   // tunggu gerakan jelas horizontal
+      dragOn = true; lbDragged = true;
+    }
+    dragX = dx;
+    var now = performance.now();
+    vel = (e.clientX - lastX) / Math.max(1, now - lastT);
+    lastX = e.clientX; lastT = now;
+    lbMoveTrack(lbBaseX + dx, false);        // ikut jari, tanpa delay
+  });
+
+  function endPointer(e){
+    delete pts[e.pointerId];
+    order = order.filter(function(id){ return id !== e.pointerId; });
+
+    if (mode === 'pinch'){
+      if (order.length === 1){
+        mode = lbScale > 1 ? 'pan' : 'swipe';
+        x0 = pts[order[0]].x; y0 = pts[order[0]].y; tx0 = lbTx; ty0 = lbTy; dragOn = false;
+      } else {
+        mode = null;
+        if (lbScale < 1.05) lbResetZoom(true);
+      }
+      return;
+    }
+    if (mode === 'pan'){
+      var panMoved = Math.abs(lbTx - tx0) > 4 || Math.abs(lbTy - ty0) > 4;
+      if (!order.length) mode = null;
+      if (!panMoved) tapCheck();
+      return;
+    }
+    if (mode !== 'swipe') return;
+
+    if (order.length){ return; }             // masih ada jari lain
+    mode = null;
+
+    if (dragOn){
+      dragOn = false;
+      setTimeout(function(){ lbDragged = false; }, 320);
+      var far = Math.abs(dragX) > Math.min(90, view.clientWidth * 0.16);
+      var flick = Math.abs(vel) > 0.45;       // flick ringan tetap lanjut
+      if (far || flick) slideTo(dragX < 0 ? 1 : -1);
+      else lbMoveTrack(lbBaseX, true);        // kurang jauh => balik ke tengah
+      return;
+    }
+    // tap tanpa gerak: double tap = zoom
+        tapCheck();
+      }
+
+      function tapCheck(){
+        var now = performance.now();
+        if (now - lastTap < 320){ lbToggleZoom(); lastTap = 0; }
+        else lastTap = now;
+      }
+  lb.addEventListener('pointerup', endPointer);
+  lb.addEventListener('pointercancel', endPointer);
+
+  // Klik area gelap (bukan foto) => tutup. Dipakai target pointerdown, bukan target click,
+    // karena setPointerCapture membuat target click jadi elemen viewport
+    lb.addEventListener('click', function(e){
+      if (!downOnImg && !lbDragged && !fromControl) closeLightbox();
+    });
+
+  // Zoom pakai scroll roda mouse di desktop
+  lb.addEventListener('wheel', function(e){
+    if (!lbList.length) return;
+    e.preventDefault();
+    lbScale = Math.min(4, Math.max(1, lbScale * (e.deltaY < 0 ? 1.12 : 0.89)));
+    if (lbScale === 1){ lbTx = 0; lbTy = 0; }
+    lbClampPan(); lbApplyZoom(false);
+  }, {passive: false});
+
+  // Keyboard: Esc tutup (handler terpisah), panah kiri/kanan pindah foto
+  document.addEventListener('keydown', function(e){
+    if (!lb.classList.contains('open')) return;
+    if (e.key === 'ArrowRight') slideTo(1);
+    if (e.key === 'ArrowLeft') slideTo(-1);
+    if (e.key === '+' || e.key === '=') lbToggleZoom();
+  });
+
+  window.addEventListener('resize', function(){
+    if (!lb.classList.contains('open')) return;
+    lbMeasure(); lbMoveTrack(lbBaseX, false); lbClampPan(); lbApplyZoom(false);
+  });
+})();
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeBooking();closeLightbox();closePricelist()}});
 
 // Mobile hamburger menu
